@@ -1,56 +1,68 @@
-2. Technical Requirements Document (TRD)
-Tech Stack & Rationale
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        AGENTGUARD TECH STACK                            │
-├─────────────────────────────────────────────────────────────────────────┤
-│  • Client Layer:      Python SDK (`agentguard-py`), TypeScript SDK     │
-│  • Edge Proxy Core:   Rust / Axum (Low latency policy engine)           │
-│  • Control Plane API: FastAPI / Python 3.12                            │
-│  • Frontend UI:       Next.js 14 (App Router) + Tailwind CSS + ShadcnUI │
-│  • Database Engine:   PostgreSQL 16 (Relational + JSONB Audit Logs)     │
-│  • Cache & Stream:    Redis 7.2 (Rate limiting & Policy Caching)        │
-│  • Observability:     OpenTelemetry + Prometheus + Grafana              │
-└─────────────────────────────────────────────────────────────────────────┘
+# Aegis — Technical Requirements Document
 
-Rationale
-Rust Policy Engine (Proxy Core): Guarantees sub-millisecond policy evaluation, zero garbage collection pauses, and memory safety when parsing thousands of concurrent agent payload streams.
-Python SDK: Python is the native language of AI/LLM development (LangChain, CrewAI, LlamaIndex).
-PostgreSQL + JSONB: Provides relational structure for user auth/teams while leveraging JSONB indexing for flexible, unstructured agent audit logs.
-System Architecture & Data Flow
-                                 DATA FLOW DIAGRAM
-                                  
-  ┌───────────────┐     1. Tool Call      ┌───────────────────────────────┐
-  │   AI Agent    │──────────────────────►│    AgentGuard Interceptor     │
-  │ (LangChain/   │                       │       (SDK / Proxy)           │
-  │ OpenAI App)   │◄──────────────────────│                               │
-  └───────────────┘     4. Allow / Block  └───────────────┬───────────────┘
-                                                          │
-                                            2. Query Rules│ 3. Async Log
-                                                          ▼
-                                          ┌───────────────────────────────┐
-                                          │     Redis / Local Cache       │
-                                          └───────────────┬───────────────┘
-                                                          │ Sync Cache Miss
-                                                          ▼
-                                          ┌───────────────────────────────┐
-                                          │  PostgreSQL (Control Plane)   │
-                                          └───────────────────────────────┘
+## Implementation Stack
 
-Subsystems & API Protocols
-Rule Evaluation Engine (RE Engine): Evaluates incoming JSON tool-call payloads against active compiled policies. Uses AST parsers (e.g., sqlparser-rs) for deep query analysis rather than naive regex.
-Audit & Telemetry Pipeline: Async worker thread buffers events in memory and flushes batches to Redis/Postgres, guaranteeing zero latency impact on the critical path of the agent.
-Control Plane API: REST API for managing users, organizations, policy files, and API keys.
-Security, Auth & Threat Model
-Authentication: HMAC SHA-256 signed API Keys for SDK-to-Control-Plane communication; JWT with short-lived access tokens (15 mins) and HTTP-only refresh cookies for Web Dashboard.
-Authorization: Role-Based Access Control (RBAC): Owner, Admin, Security Engineer, Viewer.
-Threat Model:
-┌─────────────────────────────┬─────────────────────────────────┬──────────────────────────────────────────┐
-│ Threat Vector               │ Risk Level                      │ Mitigation Strategy                      │
-├─────────────────────────────┼─────────────────────────────────┼──────────────────────────────────────────┤
-│ Prompt Injection Bypass     │ High                            │ Multi-stage AST parsing & decoder pipeline│
-│ Rogue Agent Replay Attack   │ Medium                          │ Nonce-based signature verification       │
-│ Log Storage Tampering       │ High                            │ HMAC-chained append-only audit trail     │
-└─────────────────────────────┴─────────────────────────────────┴────────────────────
+- Python 3.9+ application package.
+- Standard-library-first runtime interception and dashboard server.
+- PyYAML for policy file parsing.
+- SQLite for local audit storage and fallback persistence.
+- `pytest` for the test suite.
+
+## Delivered Architecture
+
+### Interception path
+
+1. A Python function is decorated with `@guardrail`.
+2. The decorator captures arguments and evaluates them with `PolicyEngine`.
+3. Allowed calls execute normally; blocked calls raise `PolicyViolationError`.
+4. Audit events are written through `aegis.db.log_audit_event`.
+5. Async functions are awaited transparently.
+
+### Context path
+
+1. Execution context is stored in `contextvars`.
+2. `agent_id`, `org_id`, and `api_key_hash` are isolated per task or thread.
+3. Audit logging reads the active context when an explicit agent ID is not provided.
+
+### Audit persistence path
+
+1. Local audit events are written to SQLite by default.
+2. If the primary database path fails, Aegis attempts a local fallback write.
+3. Failures are never allowed to crash the host application.
+4. The persistence function returns a boolean status for observability.
+
+### CLI and dashboard path
+
+1. `aegis init` creates a default `guardrails.yaml`.
+2. `aegis check` validates YAML syntax and required keys.
+3. `aegis status` reports local audit counts.
+4. `aegis dashboard` launches a local inspection interface over HTTP.
+
+## Policy Model
+
+The shipped policy engine supports deterministic matching for destructive SQL and shell payloads, plus secret redaction for common credential patterns. It is intentionally small, local, and auditable.
+
+## Data Storage
+
+- Local SQLite audit database: `aegis_audit.db`.
+- Audit table fields: event ID, agent ID, tool name, payload, verdict, triggered rule, latency, and timestamp.
+
+## Test Coverage
+
+The repository includes unit coverage for:
+
+- sync and async decorator behavior,
+- context isolation,
+- audit logging resilience,
+- CLI commands,
+- dashboard responses and metrics.
+
+## Explicitly Out of Scope
+
+- Rust or sidecar proxy implementations.
+- Next.js or other browser SPA control planes.
+- Redis, Prometheus, Grafana, or remote fleet infrastructure.
+- API key management services and RBAC backends.
 
 
 

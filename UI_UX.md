@@ -1,22 +1,38 @@
-7. UI/UX.md
-Information Architecture
-[Dashboard Root]
-   ├── 1. Live Interceptions Feed (Real-time stream)
-   ├── 2. Policy Management
-   │      ├── Active Rulesets
-   │      └── Rule Editor (Visual / YAML)
-   ├── 3. Audit Logs & Traces
-   │      ├── Log Search & Filters
-   │      └── Replay Execution Trace
-   ├── 4. Agents & Fleets
-   │      ├── Agent Registry
-   │      └── API Key Management
-   └── 5. Settings & Team Access (RBAC)
+# Aegis — UI / UX
 
-Layout Grid & Navigation Scheme
-Sidebar: Fixed 240px dark sidebar containing main entity navigation.
-Header Bar: Active environment selector (Production, Staging, Development), system status ping, user avatar.
-Main Area: Fluid responsive container with a 12-column CSS grid (gap-6).
+## Dashboard Information Architecture
+
+The shipped dashboard is intentionally small and local.
+
+- Dashboard root
+- Summary metrics
+- Top triggered rules
+- Audit logs table
+- Verdict and agent filters
+
+## Layout
+
+- Fixed 240px dark sidebar.
+- Responsive main area with a 12-column grid.
+- Dark header section with operational status text.
+- Dense table layout for audit inspection.
+
+## Visual Treatment
+
+- Allowed status uses green.
+- Blocked status uses red.
+- Warnings and human-approval style labels use amber.
+- Payload text uses a monospace font.
+
+## Interaction Model
+
+- Filter audit rows by verdict.
+- Filter audit rows by agent ID.
+- Keep the interface readable on smaller screens.
+
+## Notes
+
+The implementation follows the design direction in `Design.md` while remaining a standard-library HTTP application rather than a browser SPA.
 
 
 

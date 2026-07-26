@@ -1,35 +1,44 @@
 5. Workflow.md
-Phased Development Roadmap
-Phase 1: Open-Source SDK (Weeks 1–2)  ---> Phase 2: Web Dashboard & SaaS (Weeks 3–4) ---> Phase 3: Enterprise Proxy (Weeks 5–6)
-Sprint Backlog & Milestones
-Phase 1: Open-Source Core SDK (Sprint 1 - Days 1 to 14)
-Milestone 1.1: Core Python decorator @guardrail() and tool call wrapper.
+# Aegis — Workflow
 
-Milestone 1.2: YAML parser for local guardrails.yaml configurations.
+## Delivered User Workflow
 
-Milestone 1.3: Built-in SQL AST analyzer (DROP, DELETE detection) and secret scanners.
+1. Install the package in a Python project.
+2. Run `aegis init` to generate a baseline `guardrails.yaml`.
+3. Validate the policy file with `aegis check`.
+4. Decorate tool functions with `@guardrail`.
+5. Inspect local audit state with `aegis status` or `aegis dashboard`.
 
-Milestone 1.4: PyPI package release (pip install agentguard).
+## Runtime Sequence
 
-Phase 2: Web Control Plane & SaaS (Sprint 2 - Days 15 to 28)
-Milestone 2.1: Next.js Dashboard + Authentication (JWT + OAuth2).
+### Phase 1: Interception
 
-Milestone 2.2: Centralized Audit Log Viewer with filtering and JSON inspect.
+- Capture function arguments.
+- Evaluate against policy rules.
+- Block destructive payloads.
 
-Milestone 2.3: Webhook alerting pipeline (Slack & Email integration).
+### Phase 2: Context
 
-Phase 3: Enterprise Gateway & Proxy Sidecar (Sprint 3 - Days 29 to 42)
-Milestone 3.1: High-throughput Rust HTTP proxy sidecar docker container.
+- Scope agent and tenant metadata per request or async task.
+- Restore context after the request finishes.
 
-Milestone 3.2: Human-in-the-Loop Slack approval workflow.
+### Phase 3: Persistence
 
-Milestone 3.3: SOC2 Type II compliance controls & audit export.
+- Persist the audit event to the local database.
+- Fall back safely if the primary path fails.
 
-Definition of Done (DoD)
-All unit tests pass with > 90% code coverage.
+### Phase 4: Inspection
 
-Latency benchmark confirms < 5ms overhead per interception.
+- Use the CLI to initialize, validate, and inspect local state.
+- Use the dashboard for visual inspection of audit rows and triggered rules.
 
-Security review completed (no high or critical vulnerabilities).
+### Phase 5: Demo and Verification
 
-Documentation updated with working code examples.
+- Run the end-to-end demo script.
+- Run the test suite before release.
+
+## Definition of Done
+
+- All shipped tests pass.
+- The CLI and dashboard behave as documented.
+- The docs match the current Python implementation.
