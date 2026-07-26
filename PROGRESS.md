@@ -18,6 +18,18 @@
 - [x] PostgreSQL Fallback & Audit Persistence Resilience (`aegis/db.py`)
 - [x] Full Phase 3 Test Suite (`tests/test_decorator.py`, `tests/test_context.py`, `tests/test_db_resilience.py`)
 
+## Phase 4: CLI, Configuration, and Inspection Dashboard
+- [x] CLI Command Engine (`aegis/cli.py`)
+- [x] Policy Initialization, Validation, and Status Commands
+- [x] Lightweight Inspection Dashboard (`aegis/dashboard.py`)
+- [x] Dashboard Test Suite (`tests/test_cli.py`, `tests/test_dashboard.py`)
+
+## Phase 5: Production Hardening, Packaging & Demo Polish
+- [x] End-to-End Demo Pipeline (`examples/demo_full_pipeline.py`)
+- [x] Packaging Verification (`pyproject.toml` entry points and dependencies)
+- [x] Documentation Sync (`README.md`)
+- [x] Progress Log Completion (`PROGRESS.md`)
+
 ## Current Status
-- All 9 unit tests passing (`python -m pytest`)
-- Codebase fully type-annotated and asynchronous-ready
+- All 14 unit tests passing (`python -m pytest`)
+- Codebase fully type-annotated, asynchronous-ready, and demo-ready
