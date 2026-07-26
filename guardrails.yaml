@@ -1,0 +1,8 @@
+version: "1.0"
+policies:
+  - name: block_destructive_sql
+    enabled: true
+  - name: block_destructive_shell
+    enabled: true
+  - name: redact_pii
+    enabled: true
