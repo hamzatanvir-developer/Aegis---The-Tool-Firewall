@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aegis-ai-firewall"
-version = "0.1.0"
+version = "0.1.2"
 description = "A production-grade runtime security firewall and audit governance framework for LLM agents and tool-use pipelines."
 readme = "README.md"
 requires-python = ">=3.11"
