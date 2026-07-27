@@ -1470,48 +1470,88 @@ def run_dashboard(host: str = "127.0.0.1", port: int = 8000, db_path: str = DB_F
 if __name__ == "__main__":  # pragma: no cover
     run_dashboard()
 
-import os
-import psycopg2
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from dotenv import load_dotenv
-from aegis.dashboard import router as dashboard_router
+from fastapi import APIRouter, Query, HTTPException, Header
+from fastapi.responses import HTMLResponse
 
-# Load environment variables
-load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
+router = APIRouter()
 
-app = FastAPI(title="Aegis Tool Firewall API", version="1.0")
+@router.get("/", response_class=HTMLResponse)
+@router.get("/dashboard", response_class=HTMLResponse)
+def get_dashboard_view():
+    return HTMLResponse(content=render_dashboard_html(DB_FILE))
 
-# Mount your modular dashboard router
-app.include_router(dashboard_router)
+@router.get("/api/bootstrap")
+def api_bootstrap(
+    verdict: Optional[str] = Query(None),
+    agent_id: Optional[str] = Query(None),
+    rule_name: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(DEFAULT_LIMIT),
+):
+    snapshot = fetch_dashboard_state(DB_FILE, verdict=verdict, agent_id=agent_id, rule_name=rule_name, search=search, limit=limit)
+    return snapshot.as_json()
 
-class ToolExecutionRequest(BaseModel):
-    event_type: str
-    status: str
-    details: str
-    source_ip: str
+@router.get("/api/logs")
+def api_logs(
+    verdict: Optional[str] = Query(None),
+    agent_id: Optional[str] = Query(None),
+    rule_name: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(DEFAULT_LIMIT),
+):
+    snapshot = fetch_dashboard_state(DB_FILE, verdict=verdict, agent_id=agent_id, rule_name=rule_name, search=search, limit=limit)
+    return {"logs": [_serialize_row(row) for row in snapshot.logs]}
 
-@app.get("/")
-def read_root():
-    return {"message": "Aegis Tool Firewall API is running live successfully!"}
+@router.get("/api/summary")
+def api_summary(
+    verdict: Optional[str] = Query(None),
+    agent_id: Optional[str] = Query(None),
+    rule_name: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(DEFAULT_LIMIT),
+):
+    snapshot = fetch_dashboard_state(DB_FILE, verdict=verdict, agent_id=agent_id, rule_name=rule_name, search=search, limit=limit)
+    return {"metrics": asdict(snapshot.metrics)}
 
-@app.post("/log-event")
-def log_event(request: ToolExecutionRequest):
-    try:
-        connection = psycopg2.connect(DATABASE_URL)
+@router.get("/api/policy")
+def api_policy():
+    return asdict(_read_policy_preview())
+
+@router.get("/stream")
+def api_stream(since: int = Query(0)):
+    snapshot = fetch_dashboard_state(DB_FILE, limit=DEFAULT_LIMIT)
+    new_logs = [row for row in snapshot.logs if row.rowid > since]
+    max_rowid = snapshot.logs[0].rowid if snapshot.logs else since
+    return {
+        "server_time": int(time.time()),
+        "max_rowid": max_rowid,
+        "logs": [_serialize_row(row) for row in new_logs],
+        "metrics": asdict(snapshot.metrics),
+    }
+
+@router.get("/api/approve")
+def api_approve(
+    rowid: int = Query(..., ge=1),
+    action: str = Query("ALLOW"),
+    authorization: Optional[str] = Header(None)
+):
+    expected_token = os.environ.get("AEGIS_ADMIN_TOKEN", "")
+    if expected_token and authorization != f"Bearer {expected_token}":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    action_upper = action.upper()
+    if action_upper not in {"ALLOW", "BLOCK"}:
+        raise HTTPException(status_code=400, detail="Invalid action value")
+
+    new_verdict = "ALLOW" if action_upper == "ALLOW" else "BLOCK"
+
+    with closing(_connect(DB_FILE)) as connection:
         cursor = connection.cursor()
-        
-        insert_query = """
-            INSERT INTO firewall_logs (event_type, status, details, source_ip)
-            VALUES (%s, %s, %s, %s);
-        """
-        cursor.execute(insert_query, (request.event_type, request.status, request.details, request.source_ip))
+        cursor.execute("SELECT rowid FROM audit_logs WHERE rowid = ?", (rowid,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Record not found")
+
+        cursor.execute("UPDATE audit_logs SET verdict = ? WHERE rowid = ?", (new_verdict, rowid))
         connection.commit()
-        
-        cursor.close()
-        connection.close()
-        return {"status": "success", "message": "Firewall log saved to Supabase!"}
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+    return {"success": True, "rowid": rowid, "verdict": new_verdict}
