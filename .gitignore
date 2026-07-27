@@ -1,8 +1,26 @@
+# Environment variables and sensitive data
+.env
+
+# Python compilation and cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
 .venv/
 env/
+venv/
+ENV/
+
+# Distribution and packaging
 dist/
 build/
 *.egg-info/
-.pytest_cache/*.db 
+.eggs/
+
+# Testing and local databases
+.pytest_cache/
+*.db
+*.sqlite3
