@@ -194,4 +194,4 @@ To confirm that your database connection pool and table structures are working s
 
 DOS
 python test_db.py
-python test_queries.py
+python test_queries.py 
