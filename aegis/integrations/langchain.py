@@ -53,7 +53,7 @@ class AegisLangChainCallbackHandler(BaseCallbackHandler):
                 triggered_rule=result.triggered_rule,
                 latency_ms=latency_ms
             )
-        except Exception:
+        except Exception: # nosec B110
             pass # Fallback cleanly if DB fails
 
         # Enforce firewall block

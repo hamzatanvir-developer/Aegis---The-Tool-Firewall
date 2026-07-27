@@ -17,7 +17,7 @@ def web_server_fixture():
 
 def test_security_headers_enforced():
     """Verify standard security and anti-clickjacking headers are present on all responses."""
-    response = requests.get("http://127.0.0.1:8002/")
+    response = requests.get("http://127.0.0.1:8002/", timeout=5)
     assert response.status_code == 200
     assert response.headers.get("X-Content-Type-Options") == "nosniff"
     assert response.headers.get("X-Frame-Options") == "DENY"
@@ -30,7 +30,7 @@ def test_api_endpoint_fuzzing_malformed_inputs():
         {"rowid": "999999", "action": "DROP TABLE audit_logs;"}
     ]
     for params in fuzz_payloads:
-        response = requests.get("http://127.0.0.1:8002/api/approve", params=params)
+        response = requests.get("http://127.0.0.1:8002/api/approve", params=params, timeout=5)
         # Server must handle gracefully (200 JSON failure or 400/404 client error), never crash with 500
         assert response.status_code in [200, 400, 404]
         if response.status_code == 200:
@@ -44,5 +44,6 @@ def test_path_traversal_web_fuzzing():
         "..\\..\\..\\Windows\\win.ini"
     ]
     for path in traversal_paths:
-        response = requests.get(f"http://127.0.0.1:8002/{path}")
+        # Target the static asset route to properly test path traversal defense
+        response = requests.get(f"http://127.0.0.1:8002/static/{path}", timeout=5)
         assert response.status_code in [400, 404, 403]

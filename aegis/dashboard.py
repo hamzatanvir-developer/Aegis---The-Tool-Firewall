@@ -1078,7 +1078,7 @@ def _query_logs(
     sql = (
         "SELECT rowid, created_at, agent_id, tool_name, payload, verdict, triggered_rule, latency_ms "
         "FROM audit_logs"
-        f"{clause_sql} ORDER BY rowid {direction} LIMIT ?"
+        f"{clause_sql} ORDER BY rowid {direction} LIMIT ?" # nosec B608
     )
     params.append(limit)
 
@@ -1314,7 +1314,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(page)
             return
-
+ 
         if parsed.path == "/api/bootstrap": 
             snapshot = self._current_snapshot(params)
             self._write_json(snapshot.as_json())

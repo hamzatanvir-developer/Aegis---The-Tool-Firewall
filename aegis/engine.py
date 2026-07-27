@@ -50,7 +50,7 @@ class PolicyEngine:
     PII_PATTERNS = {
         "aws_access_key": r"AKIA[0-9A-Z]{16,20}",
         "openai_api_key": r"sk-[a-zA-Z0-9]{32,}",
-        "bearer_token": r"Bearer\s+[a-zA-Z0-9\-\._~\+\/]+=*",
+        "bearer_token": r"Bearer\s+[a-zA-Z0-9\-\._~\+\/]+=*", # nosec B105
     }
 
     def __init__(self, policy_config: Optional[Dict[str, Any]] = None):

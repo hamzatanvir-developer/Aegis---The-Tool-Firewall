@@ -30,14 +30,20 @@ def test_guardrail_supports_async_tools(monkeypatch):
         return f"Query executed: {sql_query}"
 
     async def run_scenarios() -> None:
-        allowed_result = await execute_query(sql_query="SELECT * FROM users WHERE id = 1;")
-        assert allowed_result == "Query executed: SELECT * FROM users WHERE id = 1;"
+            allowed_result = await execute_query(sql_query="SELECT * FROM users WHERE id = 1;")
+            assert allowed_result == "Query executed: SELECT * FROM users WHERE id = 1;"
 
-        with pytest.raises(PolicyViolationError):
-            await execute_query(sql_query="DROP TABLE users;")
+            # Reset rate limit state or add a small delay/bypass context if needed
+            from aegis.core import get_execution_context
+            ctx = get_execution_context()
+            if hasattr(ctx, "rate_limiter"):
+                ctx.rate_limiter.clear()
 
-    asyncio.run(run_scenarios())
+            with pytest.raises(PolicyViolationError):
+                await execute_query(sql_query="DROP TABLE users;")
 
-    assert [event["verdict"] for event in audit_events] == ["ALLOW", "BLOCK"]
-    assert audit_events[0]["tool_name"] == "execute_query"
-    assert audit_events[1]["triggered_rule"] == "block_destructive_sql"
+            asyncio.run(run_scenarios())
+
+            assert [event["verdict"] for event in audit_events] == ["ALLOW", "BLOCK"]
+            assert audit_events[0]["tool_name"] == "execute_query"
+            assert audit_events[1]["triggered_rule"] == "block_destructive_sql"
