@@ -1315,7 +1315,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.wfile.write(page)
             return
 
-        if parsed.path == "/api/bootstrap":
+        if parsed.path == "/api/bootstrap": 
             snapshot = self._current_snapshot(params)
             self._write_json(snapshot.as_json())
             return
