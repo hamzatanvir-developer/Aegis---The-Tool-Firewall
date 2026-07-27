@@ -1,40 +1,17 @@
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aegis-ai-firewall"
-version = "0.1.2"
-description = "A production-grade runtime security firewall and audit governance framework for LLM agents and tool-use pipelines."
+name = "aegis-tool-firewall-secure"
+version = "1.0.0"
+description = "A lightweight security firewall for AI agent tool calls."
 readme = "README.md"
-requires-python = ">=3.11"
-license = { text = "MIT" }
-authors = [
-    { name = "Muhammad Hamza" }
-]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Topic :: Security",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence"
-]
+requires-python = ">=3.10"
 dependencies = [
-    "requests>=2.0.0",
-    "langchain-core>=0.1.0"
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "psycopg2-binary>=2.9.9",
+    "python-dotenv>=1.0.1",
+    "pydantic>=2.6.4"
 ]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0.0",
-    "bandit>=1.7.0",
-    "build>=1.0.0",
-    "twine>=5.0.0"
-]
-
-[tool.setuptools.packages.find]
-include = ["aegis*"]
-exclude = ["tests*", "docs*"]   
