@@ -4,11 +4,17 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
+# Import your dashboard router or app from dashboard.py
+from dashboard import router as dashboard_router
+
 # Load environment variables
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = FastAPI(title="Aegis Tool Firewall API", version="1.0")
+
+# Include the dashboard routes from dashboard.py
+app.include_router(dashboard_router)
 
 class ToolExecutionRequest(BaseModel):
     event_type: str
