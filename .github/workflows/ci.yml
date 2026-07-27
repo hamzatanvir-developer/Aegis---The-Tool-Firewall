@@ -1,4 +1,4 @@
-name: CI & Security Scan
+name: CI & Security Scan v2
 
 on:
   push:
@@ -18,9 +18,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: 'pip'
 
-      - name: Install Dependencies
+      - name: Install Dependencies & Package
         run: |
           python -m pip install --upgrade pip
           pip install requests langchain-core pytest bandit
