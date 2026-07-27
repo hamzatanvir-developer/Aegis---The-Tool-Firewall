@@ -23,7 +23,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence"
 ]
 dependencies = [
-    # List your runtime dependencies here if any (e.g., fastapi, uvicorn if used in dashboard)
+    "langchain-core",
+    "requests"
 ]
 
 [project.optional-dependencies]
@@ -36,4 +37,4 @@ dev = [
 
 [tool.setuptools.packages.find]
 include = ["aegis*"]
-exclude = ["tests*", "docs*"]
+exclude = ["tests*", "docs*"]   
