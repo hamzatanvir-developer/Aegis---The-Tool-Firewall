@@ -5,9 +5,6 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from aegis.dashboard import router as dashboard_router
 
-# Import your dashboard router or app from dashboard.py
-from dashboard import router as dashboard_router
-
 # Load environment variables
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
