@@ -51,6 +51,7 @@ Aegis implements a decoupled architecture combining a Python interceptor package
 │ Supabase Cloud PostgreSQL DB    │
 │ (Table: firewall_logs)          │
 └─────────────────────────────────┘
+
 End-to-End Execution Flow:
 Trigger Initiation: An automated workflow or AI agent prepares to execute a sensitive tool function.
 
@@ -119,6 +120,7 @@ Aegis - The tool firewall/
 ├── Procfile                # Startup process configuration
 ├── .env                    # Local environment variables file (git-ignored)
 └── README.md               # Comprehensive system documentation
+
 7. Installation & PyPI Deployment Workflow
 Aegis is published on the Python Package Index (PyPI) as aegis-tool-firewall.
 
@@ -130,6 +132,7 @@ pip install aegis-tool-firewall
 Installing for Development & Testing:
 DOS
 pip install aegis-tool-firewall[dev]
+
 8. Environment Configuration (Secure Setup)
 To allow Aegis to connect to your Supabase database and log audit trails, create a .env file in your project root and configure your connection string securely using placeholders:
 
@@ -174,6 +177,7 @@ JSON
   "status": "success",
   "message": "Firewall log saved to Supabase!"
 }
+
 10. AI Workflow Integration & Code Implementation
 Companies and developers integrate Aegis into their AI agent runtimes by applying the @guardrail decorator to sensitive functions, ensuring live interception, policy validation, and approval checks:
 
@@ -189,7 +193,8 @@ os.environ["DATABASE_URL"] = "postgresql://postgres.your_project_id:your_databas
 def execute_agent_tool(query: str) -> str:
     # Tool execution protected under Aegis security boundaries
     return f"Executed successfully: {query}"
-11. Database Verification & Testing Suite
+
+    11. Database Verification & Testing Suite
 To confirm that your database connection pool and table structures are working seamlessly, execute the verification scripts included in the repository:
 
 DOS
