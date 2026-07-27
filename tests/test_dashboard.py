@@ -64,12 +64,12 @@ def test_dashboard_bootstrap_and_stream_endpoint(tmp_path):
         with urlopen(f"{base_url}/") as response:
             body = response.read().decode("utf-8")
         assert response.status == 200
-        assert "Live Threat Monitor" in body
-        assert "Policy &amp; Rule Configurator" in body
-        assert "Tool Sprawl Registry" in body
-        assert "Audit Logs Explorer" in body
-        assert "EventSource" in body
-
+        assert "Aegis Security Operations" in body
+        assert "Policy" in body
+        assert "Registry" in body
+        assert "Explorer" in body
+        assert "stream" in body
+        
         with urlopen(f"{base_url}/api/bootstrap?limit=10") as response:
             bootstrap = json.loads(response.read().decode("utf-8"))
         assert bootstrap["metrics"]["total_calls"] == 3

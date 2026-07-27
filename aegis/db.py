@@ -23,12 +23,19 @@ def _ensure_schema(db_path: str) -> None:
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
+    # Performance & Index Hardening to prevent slow queries / scans
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_agent ON audit_logs(agent_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_verdict ON audit_logs(verdict);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at DESC);")
+    
     conn.commit()
     conn.close()
 
+
 def init_db(db_path: str = DB_FILE):
-    """Initializes the local SQLite database schema for audit logging."""
+    """Initializes the local SQLite database schema for audit logging with performance indices."""
     _ensure_schema(db_path)
+
 
 def log_audit_event(
     event_id: str,
@@ -40,7 +47,7 @@ def log_audit_event(
     db_path: str = DB_FILE,
     agent_id: Optional[str] = None,
 ):
-    """Inserts an audit log entry into the database and never raises on persistence failure."""
+    """Inserts an audit log entry securely using parameterized execution and never raises on failure."""
 
     if agent_id in (None, "unknown"):
         agent_id = get_execution_context().agent_id

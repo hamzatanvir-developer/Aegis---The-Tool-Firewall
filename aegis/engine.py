@@ -22,6 +22,8 @@ class PolicyEngine:
         r"\bDROP\s+TABLE\b",
         r"\bTRUNCATE\s+TABLE\b",
         r"\bDELETE\s+FROM\b(?!\s+WHERE\b)",
+        r"'\s*OR\s*'?[0-9a-zA-Z]+'?\s*=\s*'?",
+        r"--",
     ]
 
     DESTRUCTIVE_SHELL = [
@@ -143,7 +145,7 @@ class PolicyEngine:
             if re.search(pattern, payload_str, re.IGNORECASE):
                 return EvaluationResult(is_allowed=False, verdict="BLOCK", triggered_rule="block_ssrf_risk", reason=f"SSRF target matched '{pattern}'", sanitized_args=kwargs)
 
-        # 5. Human Approval Interception Triggers (Only for non-destructive, safe shell/deploy actions)
+        # 5. Human Approval Interception Triggers
         if tool_name in ["execute_shell", "run_shell"]:
             return EvaluationResult(
                 is_allowed=False,
@@ -164,6 +166,13 @@ class PolicyEngine:
 
     def _is_rate_limited(self, agent_id: str) -> bool:
         current_time = time.time()
+        
+        # Periodic cleanup of old keys to prevent memory leaks (DoS mitigation)
+        if len(self.request_timestamps) > 10000:
+            stale_keys = [k for k, v in self.request_timestamps.items() if not v or current_time - v[-1] > 60]
+            for k in stale_keys:
+                self.request_timestamps.pop(k, None)
+
         timestamps = self.request_timestamps.get(agent_id, [])
         valid_timestamps = [t for t in timestamps if current_time - t < self.rate_limit_window]
         if len(valid_timestamps) >= self.rate_limit_max:

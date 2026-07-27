@@ -1267,11 +1267,27 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     db_path: str = DB_FILE
 
+    def _set_security_headers(self) -> None:
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Content-Security-Policy", "default-src 'self' 'unsafe-inline';")
+        self.send_header("X-XSS-Protection", "1; mode=block")
+
     def _write_json(self, payload: dict[str, Any], status: int = 200) -> None:
         body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        self._set_security_headers()
+        self.end_headers()
+        self.wfile.write(body)
+
+        def _set_security_headers(self) -> None:
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("X-Frame-Options", "DENY")
+            self.send_header("Content-Security-Policy", "default-src 'self' 'unsafe-inline';")
+            self.send_header("X-XSS-Protection", "1; mode=block")
+
         self.end_headers()
         self.wfile.write(body)
 
@@ -1294,6 +1310,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(page)))
+            self._set_security_headers()
             self.end_headers()
             self.wfile.write(page)
             return
@@ -1302,7 +1319,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             snapshot = self._current_snapshot(params)
             self._write_json(snapshot.as_json())
             return
-
+        
         if parsed.path == "/api/logs":
             snapshot = self._current_snapshot(params)
             self._write_json({"logs": [_serialize_row(row) for row in snapshot.logs]})
@@ -1318,14 +1335,37 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
 
         # === ADD THE APPROVAL ENDPOINT HERE ===
+        # === UPDATE THE APPROVAL ENDPOINT FOR SECURITY ===
         if parsed.path == "/api/approve":
-            rowid = int(params.get("rowid", [0])[0])
+            # Optional: Check a simple bearer token or shared secret header
+            auth_header = self.headers.get("Authorization", "")
+            expected_token = os.environ.get("AEGIS_ADMIN_TOKEN", "")
+            if expected_token and auth_header != f"Bearer {expected_token}":
+                self._write_json({"success": False, "error": "Unauthorized"}, status=401)
+                return
+
+            try:
+                rowid = int(params.get("rowid", [0])[0])
+            except (ValueError, TypeError):
+                self._write_json({"success": False, "error": "Invalid rowid format"}, status=400)
+                return
+
             action = params.get("action", ["ALLOW"])[0].upper()
+            if action not in {"ALLOW", "BLOCK"}:
+                self._write_json({"success": False, "error": "Invalid action value"}, status=400)
+                return
+                
             new_verdict = "ALLOW" if action == "ALLOW" else "BLOCK"
             
             if rowid > 0:
                 with closing(_connect(self.db_path)) as connection:
                     cursor = connection.cursor()
+                    # Ensure the row exists before updating to prevent silent failures
+                    cursor.execute("SELECT rowid FROM audit_logs WHERE rowid = ?", (rowid,))
+                    if not cursor.fetchone():
+                        self._write_json({"success": False, "error": "Record not found"}, status=404)
+                        return
+
                     cursor.execute(
                         "UPDATE audit_logs SET verdict = ? WHERE rowid = ?",
                         (new_verdict, rowid)
@@ -1335,7 +1375,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             else:
                 self._write_json({"success": False, "error": "Invalid rowid"}, status=400)
             return
-        # ======================================
+        # ===============================================
+    
 
         if parsed.path == "/stream":
             self._handle_stream(params)
