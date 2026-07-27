@@ -3,6 +3,7 @@ import psycopg2
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from aegis.dashboard import router as dashboard_router
 
 # Import your dashboard router or app from dashboard.py
 from dashboard import router as dashboard_router
