@@ -1,11 +1,12 @@
+import json
+import sqlite3
 import threading
-import urllib.request
-from http.server import ThreadingHTTPServer
+from urllib.request import urlopen
 
-from aegis.dashboard import calculate_dashboard_metrics, create_dashboard_server
+import aegis.dashboard as dashboard
 
 
-def _populate_audit_db(connection):
+def _populate_audit_db(connection: sqlite3.Connection) -> None:
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -32,41 +33,56 @@ def _populate_audit_db(connection):
     connection.commit()
 
 
-def test_dashboard_endpoint_returns_http_200(tmp_path):
+def test_fetch_audit_data_reads_metrics_and_rows(tmp_path, monkeypatch):
     db_path = tmp_path / "audit.db"
-    import sqlite3
-
     with sqlite3.connect(db_path) as connection:
         _populate_audit_db(connection)
 
-    server: ThreadingHTTPServer = create_dashboard_server(port=0, db_path=str(db_path))
+    monkeypatch.setattr(dashboard, "DB_FILE", str(db_path))
+
+    total, allowed, blocked, rows = dashboard.fetch_audit_data()
+
+    assert total == 3
+    assert allowed == 1
+    assert blocked == 2
+    assert "agent-a" in rows
+    assert "block_destructive_sql" in rows
+
+
+def test_dashboard_bootstrap_and_stream_endpoint(tmp_path):
+    db_path = tmp_path / "audit.db"
+    with sqlite3.connect(db_path) as connection:
+        _populate_audit_db(connection)
+
+    server = dashboard.create_dashboard_server(port=0, db_path=str(db_path))
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
     try:
-        port = server.server_address[1]
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/") as response:
-            body = response.read().decode("utf-8")
+        base_url = f"http://127.0.0.1:{server.server_address[1]}"
 
+        with urlopen(f"{base_url}/") as response:
+            body = response.read().decode("utf-8")
         assert response.status == 200
-        assert "Aegis Dashboard" in body
-        assert "Total Invocations" in body
+        assert "Live Threat Monitor" in body
+        assert "Policy &amp; Rule Configurator" in body
+        assert "Tool Sprawl Registry" in body
+        assert "Audit Logs Explorer" in body
+        assert "EventSource" in body
+
+        with urlopen(f"{base_url}/api/bootstrap?limit=10") as response:
+            bootstrap = json.loads(response.read().decode("utf-8"))
+        assert bootstrap["metrics"]["total_calls"] == 3
+        assert bootstrap["metrics"]["blocked_calls"] == 2
+        assert len(bootstrap["logs"]) == 3
+        assert bootstrap["policy"]["exists"] in {True, False}
+
+        with urlopen(f"{base_url}/stream?since=0") as response:
+            first_line = response.readline().decode("utf-8")
+            second_line = response.readline().decode("utf-8")
+        assert first_line.startswith("event: snapshot")
+        assert second_line.startswith("data:")
     finally:
         server.shutdown()
         server.server_close()
         thread.join(timeout=2)
-
-
-def test_dashboard_metrics_calculation_against_sqlite_logs(tmp_path):
-    db_path = tmp_path / "audit.db"
-    import sqlite3
-
-    with sqlite3.connect(db_path) as connection:
-        _populate_audit_db(connection)
-
-    metrics = calculate_dashboard_metrics(str(db_path))
-
-    assert metrics.total_invocations == 3
-    assert metrics.allowed_count == 1
-    assert metrics.blocked_count == 2
-    assert metrics.top_rules_triggered[0] == ("block_destructive_sql", 2)

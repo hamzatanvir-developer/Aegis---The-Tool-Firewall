@@ -1,8 +1,37 @@
 version: "1.0"
 policies:
-  - name: block_destructive_sql
-    enabled: true
   - name: block_destructive_shell
-    enabled: true
-  - name: redact_pii
-    enabled: true
+    description: "Hard blocks destructive shell commands containing rm -rf."
+    tool_name: "run_shell"
+    pattern: "rm -rf"
+    action: BLOCK
+
+  - name: require_approval_for_shell
+    description: "Forces human verification for other shell commands."
+    tool_name: "run_shell"
+    action: REQUIRE_APPROVAL
+
+  - name: allow_deploy_service
+    description: "Allows deployment service tool."
+    tool_name: "deploy_service"
+    action: ALLOW
+
+  - name: allow_deploy_cloud
+    description: "Allows cloud deployment tool."
+    tool_name: "deploy_cloud"
+    action: ALLOW
+
+  - name: require_approval_for_destructive_db
+    description: "Intercepts database modifications requiring sign-off."
+    tool_name: "db_write"
+    action: REQUIRE_APPROVAL
+
+  - name: block_destructive_sql
+    description: "Hard blocks drop table commands."
+    tool_name: "db_query"
+    pattern: "DROP TABLE"
+    action: BLOCK
+
+  - name: default_allow
+    description: "Allows all other operations."
+    action: ALLOW
