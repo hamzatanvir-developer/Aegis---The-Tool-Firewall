@@ -4,7 +4,7 @@
 
 ### Enterprise AI Security Middleware for Autonomous Agent Governance
 
-<img src="./docs/images/aegis-banner.png" width="900"/>
+<img src="C:\Muhammad Hamza\Aegis logo.png" width="900"/>
 
 <br>
 
