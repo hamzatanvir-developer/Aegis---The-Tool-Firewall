@@ -194,3 +194,733 @@ Based on the final verdict:
 - Policy violations raise `PolicyViolationError`
 
 ---
+
+# 3. Comprehensive Feature Set
+
+Aegis provides a complete security framework for controlling autonomous AI tool execution.
+
+---
+
+## 🔥 Core Security Features
+
+| Feature | Description |
+|---|---|
+| Real-Time Request Interception | Captures AI tool execution requests instantly at the function execution boundary. |
+| Security Policy Engine | Evaluates every operation against predefined security rules. |
+| Granular Security Verdicts | Classifies requests as `ALLOWED`, `BLOCKED`, or `REQUIRES APPROVAL`. |
+| Persistent Cloud Auditing | Stores complete execution history inside Supabase PostgreSQL. |
+| Input Schema Protection | Uses strict validation models to reject malformed or unsafe telemetry data. |
+| Human Approval Workflow | Supports manual authorization for sensitive operations. |
+| Async Execution Support | Designed to support asynchronous AI tools and distributed environments. |
+| Graceful Failure Handling | Prevents system interruption during database or storage failures. |
+
+---
+
+## 🛡️ Real-Time Request Interception
+
+Aegis operates directly at the tool execution boundary.
+
+Before an AI agent can execute a sensitive operation, Aegis captures:
+
+- Function name
+- Execution parameters
+- Request metadata
+- Agent identity
+- Runtime context
+- Security information
+
+This prevents uncontrolled execution from autonomous systems.
+
+---
+
+## ⚖️ Granular Security Verdict System
+
+Every intercepted request receives a strict security classification.
+
+| Status | Action |
+|---|---|
+| `ALLOWED` | Request continues execution |
+| `BLOCKED` | Request is rejected immediately |
+| `REQUIRES APPROVAL` | Execution pauses until authorization |
+
+---
+
+## 📊 Persistent Cloud Auditing
+
+Aegis integrates with Supabase PostgreSQL to maintain:
+
+- Centralized security logs
+- Searchable execution history
+- Compliance records
+- Incident investigation data
+
+Every security event becomes traceable.
+
+---
+
+## 🔐 Input Schema Protection
+
+Aegis uses strict data validation models to protect against:
+
+- Invalid payload structures
+- Missing security metadata
+- Malformed requests
+- Unexpected execution parameters
+
+---
+
+## ⚡ Asynchronous Execution Support
+
+Designed for modern AI systems supporting:
+
+- Async tool calls
+- Multiple agents
+- Distributed workflows
+- Tenant-isolated execution environments
+
+---
+
+## 🧩 Graceful Degradation
+
+Aegis is designed to maintain operational stability during:
+
+- Database interruptions
+- Network failures
+- Temporary storage issues
+
+Security monitoring failures do not unnecessarily stop the primary workflow.
+
+---
+
+# 4. Technology Stack & Exact Component Versions
+
+## Backend Infrastructure
+
+| Component | Technology / Version |
+|---|---|
+| Programming Language | Python `3.10+` |
+| API Framework | FastAPI `v0.110.0` |
+| ASGI Server | Uvicorn `v0.28.0` |
+| Data Validation | Pydantic `v2.6.4` |
+| Database Driver | psycopg2-binary `v2.9.9` |
+| Environment Management | python-dotenv `v1.0.1` |
+| Database Platform | Supabase PostgreSQL |
+| Package Distribution | PyPI |
+| Version Control | Git & GitHub |
+
+---
+
+## Architecture Components
+
+| Layer | Responsibility |
+|---|---|
+| AI Agent Layer | Generates tool execution requests |
+| Middleware Layer | Intercepts and validates operations |
+| Policy Engine | Determines execution permissions |
+| Database Layer | Stores immutable security logs |
+| API Layer | Provides monitoring and integration endpoints |
+
+---
+
+# 5. System Prerequisites & Environment Requirements
+
+Before installing and deploying Aegis, ensure your environment satisfies the following requirements.
+
+---
+
+## Required Software
+
+| Requirement | Version |
+|---|---|
+| Python | `3.10+` |
+| pip | Latest stable version |
+| Git | Latest version |
+| PostgreSQL Access | Required |
+| Supabase Account | Required |
+
+---
+
+## Development Requirements
+
+You need:
+
+- Python runtime installed and available in system PATH
+- pip package manager
+- Active Supabase project
+- PostgreSQL connection string
+- Git repository access
+
+---
+
+# 6. Detailed Project Directory Structure
+
+The complete Aegis project follows this structure:
+
+```plaintext
+Aegis - The Tool Firewall/
+│
+├── app.py
+│   └── FastAPI backend service and routing logic
+│
+├── test_db.py
+│   └── Automated database connection verification
+│
+├── test_queries.py
+│   └── Database schema inspection and query testing
+│
+├── pyproject.toml
+│   └── Package metadata, dependencies, and build configuration
+│
+├── requirements.txt
+│   └── Production dependency manifest
+│
+├── Procfile
+│   └── Deployment startup configuration
+│
+├── .env
+│   └── Secure environment variables (ignored by Git)
+│
+└── README.md
+    └── Complete project documentation
+```
+
+---
+
+# 7. Installation & PyPI Deployment Workflow
+
+Aegis is distributed through the Python Package Index (PyPI).
+
+Package name:
+
+```text
+aegis-tool-firewall
+```
+
+---
+
+## Production Installation
+
+Install Aegis directly using pip:
+
+```bash
+pip install aegis-tool-firewall
+```
+
+---
+
+## Development Installation
+
+For development and testing environments:
+
+```bash
+pip install aegis-tool-firewall[dev]
+```
+
+---
+
+## Verify Installation
+
+Confirm that the package is installed:
+
+```bash
+pip show aegis-tool-firewall
+```
+
+Expected output:
+
+```text
+Name: aegis-tool-firewall
+Version: installed-version
+```
+
+---
+
+## Deployment Workflow
+
+The deployment pipeline follows:
+
+```text
+Development
+      |
+      ▼
+Local Testing
+      |
+      ▼
+Package Build
+      |
+      ▼
+PyPI Release
+      |
+      ▼
+Production Installation
+```
+
+---
+
+# 8. Environment Configuration (Secure Setup)
+
+Aegis requires a secure PostgreSQL connection string to store audit logs.
+
+Create a `.env` file in the project root directory.
+
+Example:
+
+```env
+DATABASE_URL=postgresql://postgres.your_project_id:your_database_password@aws-0-region.pooler.supabase.com:5432/postgres
+```
+
+---
+
+## Environment Variable Explanation
+
+| Variable | Purpose |
+|---|---|
+| DATABASE_URL | PostgreSQL database connection string |
+
+---
+
+## Security Guidelines
+
+Never:
+
+- Store passwords inside source code
+- Commit `.env` files to GitHub
+- Expose database credentials publicly
+
+Always:
+
+- Use environment variables
+- Add `.env` to `.gitignore`
+- Rotate exposed credentials immediately
+
+Example:
+
+```python
+import os
+
+database_url = os.environ.get("DATABASE_URL")
+```
+
+---
+
+# 9. Complete API Reference Documentation
+
+Aegis provides API endpoints for health monitoring and security event logging.
+
+---
+
+# API Base URL
+
+Example:
+
+```text
+http://localhost:8000
+```
+
+---
+
+# 9.1 Root Health Check Endpoint
+
+## Endpoint
+
+```
+GET /
+```
+
+---
+
+## Description
+
+Verifies that the Aegis backend service is running successfully.
+
+---
+
+## Request
+
+No request body required.
+
+---
+
+## Success Response
+
+### HTTP Status
+
+```text
+200 OK
+```
+
+### Response
+
+```json
+{
+  "message": "Aegis Tool Firewall API is running live successfully!"
+}
+```
+
+---
+
+# 9.2 Firewall Event Logging Endpoint
+
+## Endpoint
+
+```
+POST /log-event
+```
+
+---
+
+## Description
+
+Receives AI tool execution telemetry and stores security audit records inside the Supabase PostgreSQL database.
+
+The endpoint validates:
+
+- Event type
+- Security status
+- Execution details
+- Source information
+
+---
+
+## Request Body
+
+Content-Type:
+
+```text
+application/json
+```
+
+Example:
+
+```json
+{
+  "event_type": "TOOL_EXECUTION",
+  "status": "BLOCKED",
+  "details": "Unauthorized shell command execution attempt blocked",
+  "source_ip": "192.168.1.50"
+}
+```
+
+---
+
+## Response
+
+### Success Response
+
+```json
+{
+  "status": "success",
+  "message": "Firewall log saved to Supabase!"
+}
+```
+
+---
+
+## Example API Request
+
+Using cURL:
+
+```bash
+curl -X POST http://localhost:8000/log-event \
+-H "Content-Type: application/json" \
+-d '
+{
+  "event_type":"TOOL_EXECUTION",
+  "status":"BLOCKED",
+  "details":"Unauthorized database access attempt",
+  "source_ip":"192.168.1.50"
+}
+'
+```
+
+---
+
+# 10. AI Workflow Integration & Code Implementation
+
+Aegis integrates directly with autonomous AI agents by protecting sensitive tool functions using the `@guardrail` decorator.
+
+The decorator creates a security boundary around tool execution.
+
+---
+
+## Protected AI Tool Example
+
+```python
+import os
+
+from aegis.core import guardrail
+from aegis.exceptions import PolicyViolationError
+
+
+# Configure secure environment dynamically
+
+os.environ["DATABASE_URL"] = (
+    "postgresql://postgres.your_project_id:"
+    "your_database_password@aws-0-region.pooler.supabase.com:5432/postgres"
+)
+
+
+@guardrail
+def execute_agent_tool(query: str) -> str:
+    """
+    Protected AI agent tool execution.
+    Aegis validates this request before execution.
+    """
+
+    return f"Executed successfully: {query}"
+```
+
+---
+
+# Execution Flow With Guardrail Protection
+
+```text
+AI Agent
+   |
+   |
+   ▼
+
+Tool Function Call
+
+   |
+   |
+   ▼
+
+@guardrail Decorator
+
+   |
+   |
+   ▼
+
+Aegis Security Engine
+
+   |
+   ├───────────────┐
+   │               │
+   ▼               ▼
+
+ALLOW          BLOCK
+
+   │               │
+
+Execute        Raise
+Tool           PolicyViolationError
+
+```
+
+---
+
+# Security Decision Example
+
+## Allowed Request
+
+```text
+Agent requests:
+Read customer profile
+
+Policy Result:
+ALLOWED
+
+Action:
+Tool execution continues
+```
+
+---
+
+## Blocked Request
+
+```text
+Agent requests:
+Delete production database
+
+Policy Result:
+BLOCKED
+
+Action:
+Execution prevented
+Audit event stored
+```
+
+---
+
+## Approval Required Request
+
+```text
+Agent requests:
+Modify infrastructure configuration
+
+Policy Result:
+REQUIRES APPROVAL
+
+Action:
+Human authorization requested
+```
+
+---
+
+# 11. Database Verification & Testing Suite
+
+Aegis includes verification scripts to validate:
+
+- Database connectivity
+- Table availability
+- Query execution
+- Logging functionality
+
+---
+
+# Database Connection Test
+
+Run:
+
+```bash
+python test_db.py
+```
+
+Expected result:
+
+```text
+Database connection successful
+```
+
+---
+
+# Database Query Validation
+
+Run:
+
+```bash
+python test_queries.py
+```
+
+This verifies:
+
+- Database schema
+- Firewall log table
+- Query operations
+- Stored audit records
+
+---
+
+# Recommended Testing Workflow
+
+```text
+Install Dependencies
+
+        |
+        ▼
+
+Configure Environment Variables
+
+        |
+        ▼
+
+Run Database Verification
+
+        |
+        ▼
+
+Start FastAPI Server
+
+        |
+        ▼
+
+Send Test Security Events
+
+        |
+        ▼
+
+Verify Audit Logs
+```
+
+---
+
+# Running the Application Locally
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+Start the FastAPI server:
+
+```bash
+uvicorn app:app --reload
+```
+
+---
+
+Application will start at:
+
+```text
+http://localhost:8000
+```
+
+---
+
+# Security Best Practices
+
+When deploying Aegis in production:
+
+## Credential Protection
+
+✅ Store secrets using environment variables  
+✅ Rotate credentials regularly  
+✅ Restrict database permissions  
+
+
+## AI Agent Security
+
+✅ Never allow unrestricted tool execution  
+✅ Validate every external action  
+✅ Require approval for critical operations  
+
+
+## Database Security
+
+✅ Use encrypted database connections  
+✅ Maintain immutable audit history  
+✅ Restrict unauthorized database access  
+
+
+---
+
+# Future Development Roadmap
+
+Planned improvements:
+
+- Advanced AI behavior monitoring
+- Machine learning based threat detection
+- Multi-agent governance
+- Enterprise policy management dashboard
+- Real-time security analytics
+- Role-based access control
+- Compliance automation
+
+---
+
+# License
+
+This project is intended for enterprise AI security research, development, and deployment.
+
+---
+
+# Author & Project Information
+
+**Aegis Tool Firewall**
+
+Enterprise security middleware for autonomous AI systems.
+
+Built to provide:
+
+- AI governance
+- Secure tool execution
+- Runtime protection
+- Compliance auditing
+
+---
+
+⭐ If this project helps secure your AI workflows, consider starring the repository.
